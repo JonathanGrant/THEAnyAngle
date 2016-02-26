@@ -55,6 +55,33 @@ square = (x) -> x * x
 #Euclidean Distance for the first Heuristic. Pretty basic
 EuclideanDistance = (startPoint, goalPoint) ->
     return Math.sqrt((square (startPoint.x - goalPoint.x)) + (square (startPoint.y - goalPoint.y)))
+
+class Node
+    constructor: (point, gVal, hVal) ->
+        @point = point
+        @fVal = gVal + hVal
+        @gVal = gVal
+        @hVal = hVal
+        
+    getSuccessors: () ->
+        successors = []
+        if @point.North
+            successors.push @point.North
+        if @point.NorthWest
+            successors.push @point.NorthWest
+        if @point.NorthEast
+            successors.push @point.NorthEast
+        if @point.West
+            successors.push @point.West
+        if @point.East
+            successors.push @point.East
+        if @point.SouthWest
+            successors.push @point.SouthWest
+        if @point.SouthEast
+            successors.push @point.SouthEast
+        if @point.South
+            successors.push @point.South
+        return successors
         
 class AStarSearch
     constructor: (heuristic) ->
@@ -62,10 +89,59 @@ class AStarSearch
         @OpenList = []
         @ClosedList = []
         
-    
+    addToOpen: (node) ->
+        @OpenList.push node
+        #Now remove this point from ClosedList, and add all others to ClosedList
+        indexToRemove = @ClosedList.indexOf node
+        #Index is -1 for the first index, because nothing should be in closedList
+        if !(indexToRemove < 0)
+            #Remove!
+            @ClosedList.splice indexToRemove, 1
+        #Now add successors to list
+        for point in node.getSuccessors()
+            #If node is in openList, don't do anything
+            for inListNode in @OpenList
+                if inListNode.point is point
+                    continue
+            indexOfNode = -1
+            num = 0
+            for inListNode in @ClosedList
+                if inListNode.point is point
+                    #Save the index and break out!
+                    indexOfNode = num
+                    break
+                num += 1
+            if indexOfNode < 0
+                #Not in ClosedList or OpenList. So we can add it!
+                @ClosedList.push new Node(point, node.gVal + 1, EuclideanDistance(point, @GoalPoint))
+            else
+                #So the node is already in the ClosedList. Well, does ours have a better fVal?
+                ourFval = node.gVal + 1 + EuclideanDistance(point, @GoalPoint)
+                if ourFval < @ClosedList[indexOfNode]
+                    #Yes, we should add!
+                    #First remove the previous
+                    @ClosedList.splice indexOfNode, 1
+                    #And then we can add
+                    @ClosedList.push new Node(point, node.gVal + 1, EuclideanDistance(point, @GoalPoint))
+        
+    search: (startPoint, goalPoint) ->
+        @GoalPoint = goalPoint
+        path = []
+        if startPoint.x == goalPoint.x and startPoint.y == goalPoint.y
+            return path
+        #Make startPoint into a node
+        startNode = new Node(startPoint, 0, EuclideanDistance(startPoint.x, startPoint.y))
+        this.addToOpen startNode
+        
             
 #Runner Code
+#TODO add a timer
 grid = new Grid(30, 20)
 grid.createEmptyGrid()
 start = {x:0, y:0}
 goal = {x:14, y:11}
+searchie = new AStarSearch("EuclideanDistance")
+path = searchie.search(grid.Points[4][5], grid.Points[4][4])
+console.log path
+console.log searchie.OpenList
+console.log searchie.ClosedList
