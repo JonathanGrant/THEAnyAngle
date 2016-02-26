@@ -49,7 +49,23 @@ class Grid
                 if point.x < @Width - 1
                     point.East = @Points[point.x+1][point.y]
         console.log "Done linking points together."
+        
+#Square Fxn ya know, like x^2
+square = (x) -> x * x
+#Euclidean Distance for the first Heuristic. Pretty basic
+EuclideanDistance = (startPoint, goalPoint) ->
+    return Math.sqrt((square (startPoint.x - goalPoint.x)) + (square (startPoint.y - goalPoint.y)))
+        
+class AStarSearch
+    constructor: (heuristic) ->
+        @Heuristic = heuristic
+        @OpenList = []
+        @ClosedList = []
+        
+    
             
-                
-grid = new Grid(15, 40)
+#Runner Code
+grid = new Grid(30, 20)
 grid.createEmptyGrid()
+start = {x:0, y:0}
+goal = {x:14, y:11}
