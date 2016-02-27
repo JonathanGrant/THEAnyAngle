@@ -133,6 +133,18 @@ class AStarSearch
         startNode = new Node(startPoint, 0, EuclideanDistance(startPoint.x, startPoint.y))
         this.addToOpen startNode
         
+        while (@ClosedList.length)
+            #Get min from the ClosedList and add it to the OpenList
+            minFval = 9999999999
+            for node in
+            currNode = @ClosedList.find(function(o){ return o.fVal == res; })
+            #TODO - Smoothing? Ask Tansel for line by line of AStarSearch fxn in this location
+            addToOpen currNode
+            #If this is the goal, stop
+            if currNode.point is goalPoint
+                break
+        #Fill in Path somehow
+        return path
             
 #Runner Code
 #TODO add a timer
