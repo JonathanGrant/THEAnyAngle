@@ -14,6 +14,32 @@ class Point
     @SouthWest: null
     @SouthEast: null
     
+    #I decided to add Node variables as well
+    @fVal = 999999999999999999
+    @gVal = 999999999999999999
+    @hVal = 999999999999999999
+    @Parent = null
+    
+    getSuccessors: () ->
+        successors = []
+        if @North
+            successors.push @North
+        if @NorthWest
+            successors.push @NorthWest
+        if @NorthEast
+            successors.push @NorthEast
+        if @West
+            successors.push @West
+        if @East
+            successors.push @East
+        if @SouthWest
+            successors.push @SouthWest
+        if @SouthEast
+            successors.push @SouthEast
+        if @South
+            successors.push @South
+        return successors
+    
 #Create a Grid Class
 #The class should hold all the points of the grid, given an input of size
 class Grid
@@ -94,26 +120,37 @@ class AStarSearch
         #Now remove this point from ClosedList, and add all others to ClosedList
         indexToRemove = @ClosedList.indexOf node
         #Index is -1 for the first index, because nothing should be in closedList
+        console.log node.x, node.y
         if !(indexToRemove < 0)
             #Remove!
             @ClosedList.splice indexToRemove, 1
         #Now add successors to list
         for point in node.getSuccessors()
             #If node is in openList, don't do anything
+            inOpen = false
             for inListNode in @OpenList
-                if inListNode.point is point
-                    continue
+                if inListNode.x is point.x
+                    if inListNode.y is point.y
+                        inOpen = true
+                        break
+            if inOpen
+                continue
             indexOfNode = -1
             num = 0
             for inListNode in @ClosedList
-                if inListNode.point is point
-                    #Save the index and break out!
-                    indexOfNode = num
-                    break
+                if inListNode.x is point.x
+                    if inListNode.y is point.y
+                        #Save the index and break out!
+                        indexOfNode = num
+                        break
                 num += 1
             if indexOfNode < 0
                 #Not in ClosedList or OpenList. So we can add it!
-                @ClosedList.push new Node(point, node.gVal + 1, EuclideanDistance(point, @GoalPoint))
+                point.gVal = node.gVal + 1
+                point.hVal = EuclideanDistance(point, @GoalPoint)
+                point.fVal = point.gVal + point.hVal
+                point.Parent = node
+                @ClosedList.push point
             else
                 #So the node is already in the ClosedList. Well, does ours have a better fVal?
                 ourFval = node.gVal + 1 + EuclideanDistance(point, @GoalPoint)
@@ -122,28 +159,55 @@ class AStarSearch
                     #First remove the previous
                     @ClosedList.splice indexOfNode, 1
                     #And then we can add
-                    @ClosedList.push new Node(point, node.gVal + 1, EuclideanDistance(point, @GoalPoint))
+                    point.gVal = node.gVal + 1
+                    point.hVal = EuclideanDistance(point, @GoalPoint)
+                    point.fVal = point.gVal + point.hVal
+                    point.Parent = node
+                    @ClosedList.push point
         
     search: (startPoint, goalPoint) ->
         @GoalPoint = goalPoint
         path = []
-        if startPoint.x == goalPoint.x and startPoint.y == goalPoint.y
+        if startPoint is goalPoint
+            console.log "Start is Goal"
             return path
         #Make startPoint into a node
-        startNode = new Node(startPoint, 0, EuclideanDistance(startPoint.x, startPoint.y))
-        this.addToOpen startNode
+        #startNode = new Node(startPoint, 0, EuclideanDistance(startPoint.x, startPoint.y))
+        startPoint.gVal = 0
+        startPoint.hVal = EuclideanDistance(startPoint.x, startPoint.y)
+        startPoint.fVal = EuclideanDistance(startPoint.x, startPoint.y)
+        this.addToOpen startPoint
+        reachedGoal = false
         
         while (@ClosedList.length)
             #Get min from the ClosedList and add it to the OpenList
             minFval = 9999999999
-            for node in
-            currNode = @ClosedList.find(function(o){ return o.fVal == res; })
+            currNode = null
+            for node in @ClosedList
+                if node.fVal < minFval
+                    minFval = node.fVal
+                    currNode = node
             #TODO - Smoothing? Ask Tansel for line by line of AStarSearch fxn in this location
-            addToOpen currNode
-            #If this is the goal, stop
-            if currNode.point is goalPoint
+            if currNode
+                this.addToOpen currNode
+                #If this is the goal, stop
+                if currNode is goalPoint
+                    console.log "Reached goal!"
+                    reachedGoal = true
+                    break
+            else
+                console.log "Closed list empty"
                 break
         #Fill in Path somehow
+        #Basically as you are searching, set the parent. Then load the Goal Point. If it costed less than infinity, then a path was found. Basically keep going back until you have reached parent.
+        #Right now path isn't working because the search isn't working 100%
+#        if reachedGoal
+#            curr = goalPoint
+#            while curr != startPoint
+#                path.push curr
+#                console.log curr.x, curr.y
+#                curr = curr.Parent
+#            path.push startPoint
         return path
             
 #Runner Code
@@ -153,7 +217,10 @@ grid.createEmptyGrid()
 start = {x:0, y:0}
 goal = {x:14, y:11}
 searchie = new AStarSearch("EuclideanDistance")
-path = searchie.search(grid.Points[4][5], grid.Points[4][4])
+path = searchie.search(grid.Points[4][4], grid.Points[4][5])
+console.log "Pathie"
 console.log path
-console.log searchie.OpenList
-console.log searchie.ClosedList
+#console.log "Openie"
+#console.log searchie.OpenList
+#console.log "Closedie"
+#console.log searchie.ClosedList
