@@ -117,7 +117,6 @@ class AStarSearch
                         break
                 num += 1
             if indexOfNode < 0
-                console.log point.x, point.y, " not in closedList"
                 #Not in ClosedList or OpenList. So we can add it!
                 point.gVal = node.gVal + 1
                 point.hVal = EuclideanDistance(point, @GoalPoint)
@@ -125,7 +124,6 @@ class AStarSearch
                 point.Parent = node
                 @ClosedList.push point
             else
-                console.log point.x, point.y, " already in closedList"
                 #So the node is already in the ClosedList. Well, does ours have a better fVal?
                 ourFval = node.gVal + 1 + EuclideanDistance(point, @GoalPoint)
                 if ourFval < @ClosedList[indexOfNode]
@@ -158,13 +156,9 @@ class AStarSearch
             minFval = 9999999999
             currNode = null
             for node in @ClosedList
-                console.log node.x, node.y
                 if node.fVal < minFval
-                    console.log node.fVal
-                    console.log "THIS IS MIN"
                     minFval = node.fVal
                     currNode = node
-            console.log ""
             #TODO - Smoothing? Ask Tansel for line by line of AStarSearch fxn in this location
             if currNode
                 this.addToOpen currNode
@@ -183,7 +177,6 @@ class AStarSearch
             curr = goalPoint
             while curr != startPoint
                 path.push curr
-                console.log curr.x, curr.y
                 curr = curr.Parent
             path.push startPoint
         return path
@@ -195,7 +188,7 @@ grid.createEmptyGrid()
 start = {x:0, y:0}
 goal = {x:14, y:11}
 searchie = new AStarSearch("EuclideanDistance")
-path = searchie.search(grid.Points[4][4], grid.Points[4][5])
+path = searchie.search(grid.Points[4][4], grid.Points[0][9])
 console.log "Pathie"
 
 #Print Path
