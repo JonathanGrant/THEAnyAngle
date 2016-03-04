@@ -159,7 +159,6 @@ class AStarSearch
                 if node.fVal < minFval
                     minFval = node.fVal
                     currNode = node
-            #TODO - Smoothing? Ask Tansel for line by line of AStarSearch fxn in this location
             if currNode
                 this.addToOpen currNode
                 #If this is the goal, stop
@@ -170,16 +169,16 @@ class AStarSearch
             else
                 console.log "Closed list empty"
                 break
-        #Fill in Path somehow
+        #TODO Smoothing
+        #Now Fill in Path
         #Basically as you are searching, set the parent. Then load the Goal Point. If it costed less than infinity, then a path was found. Basically keep going back until you have reached parent.
-        #Right now path isn't working because the search isn't working 100%
         if reachedGoal
             curr = goalPoint
             while curr != startPoint
                 path.push curr
                 curr = curr.Parent
             path.push startPoint
-        return path
+        return path.reverse()
             
 #Runner Code
 #TODO add a timer
@@ -188,7 +187,7 @@ grid.createEmptyGrid()
 start = {x:0, y:0}
 goal = {x:14, y:11}
 searchie = new AStarSearch("EuclideanDistance")
-path = searchie.search(grid.Points[4][4], grid.Points[0][9])
+path = searchie.search(grid.Points[4][17], grid.Points[17][4])
 console.log "Pathie"
 
 #Print Path
