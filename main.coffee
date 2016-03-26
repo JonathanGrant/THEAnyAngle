@@ -40,6 +40,11 @@ class Point
             successors.push @South
         return successors
     
+class Obstacle
+    constructor: (x, y) ->
+        @gridX = x
+        @gridY = y
+    
 #Create a Grid Class
 #The class should hold all the points of the grid, given an input of size
 class Grid
@@ -75,6 +80,48 @@ class Grid
                 if point.x < @Width - 1
                     point.East = @Points[point.x+1][point.y]
         console.log "Done linking points together."
+    
+    createGrid: (Obstacles) ->
+        console.log("Beginning to create grid with obstacles")
+        #First create Empty points array
+        for row in [0...@Width]
+            Row = []
+            for col in [0...@Height]
+                Row.push new Point(row, col)
+            @Points.push Row
+        console.log "Done creating points array. Now linking the points."
+        #First, link them all together in the normal way
+        for points in @Points
+            for point in points
+                if point.y > 0
+                    point.North = @Points[point.x][point.y-1]
+                    if point.x > 0
+                        point.NorthWest = @Points[point.x-1][point.y-1]
+                    if point.x < @Width - 1
+                        point.NorthEast = @Points[point.x+1][point.y-1]
+                if point.y < @Height - 1
+                    point.South = @Points[point.x][point.y+1]
+                    if point.x > 0
+                        point.SouthWest = @Points[point.x-1][point.y+1]
+                    if point.x < @Width - 1
+                        point.SouthEast = @Points[point.x+1][point.y+1]
+                if point.x > 0
+                    point.West = @Points[point.x-1][point.y]
+                if point.x < @Width - 1
+                    point.East = @Points[point.x+1][point.y]
+        for obstacle in Obstacles
+            console.log(obstacle.x, ",", obstacle.y)
+            if @Points[obstacle.x][obstacle.y]
+                temp = @Points[obstacle.x][obstacle.y].SouthEast
+                if temp
+                    @Points[obstacle.x][obstacle.y].SouthEast = null
+                    temp.NorthWest = null
+                if @Points[obstacle.x][obstacle.y].NorthEast == null
+                    temp = @Points[obstacle.x][obstacle.y].East
+                    @Points[obstacle.x][obstacle.y].East = null
+                    temp.West = null
+                if obstacle.y > 0
+                    console.log "Then we can change the North"
         
 #Square Fxn ya know, like x^2
 square = (x) -> x * x
@@ -199,3 +246,7 @@ for point in path
 #console.log searchie.OpenList
 #console.log "Closedie"
 #console.log searchie.ClosedList
+
+#TODO:
+#Step One: Add Obstacles
+#Step Two: Line Smoothing
