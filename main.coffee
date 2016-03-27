@@ -137,12 +137,26 @@ class Grid
                     temp.West = null
                 if obstacle.y > 0
                     console.log "Then we can change the North"
-        
+
+                    
+##MATH Functions##
 #Square Fxn ya know, like x^2
 square = (x) -> x * x
+
+#Absolute value
+Absolute = (a) ->
+    if a < 0
+        a = -a
+    return a
+
+##Heuristic Functions##
 #Euclidean Distance for the first Heuristic. Pretty basic
 EuclideanDistance = (startcorner, goalcorner) ->
     return Math.sqrt((square (startcorner.x - goalcorner.x)) + (square (startcorner.y - goalcorner.y)))
+
+#Manhattan Distance
+ManhattanDistance = (startCorner, goalCorner) ->
+    return Absolute(goalCorner.y - startCorner.y) + Absolute(goalCorner.x - startCorner.x)
 
 #CornerAtDiagonalIntersection method
 CornerAtDiagonalIntersection = (x, y) ->
@@ -286,7 +300,10 @@ class AStarSearch
             if indexOfNode < 0
                 #Not in ClosedList or OpenList. So we can add it!
                 corner.gVal = node.gVal + 1
-                corner.hVal = EuclideanDistance(corner, @Goalcorner)
+                if @Heuristic == "EuclideanDistance"
+                    corner.hVal = EuclideanDistance(corner, @Goalcorner)
+                else
+                    corner.hVal = ManhattanDistance(corner, @Goalcorner)
                 corner.fVal = corner.gVal + corner.hVal
                 corner.Parent = node
                 @ClosedList.push corner
@@ -299,7 +316,10 @@ class AStarSearch
                     @ClosedList.splice indexOfNode, 1
                     #And then we can add
                     corner.gVal = node.gVal + 1
-                    corner.hVal = EuclideanDistance(corner, @Goalcorner)
+                    if @Heuristic == "EuclideanDistance"
+                        corner.hVal = EuclideanDistance(corner, @Goalcorner)
+                    else
+                        corner.hVal = ManhattanDistance(corner, @Goalcorner)
                     corner.fVal = corner.gVal + corner.hVal
                     corner.Parent = node
                     @ClosedList.push corner
@@ -312,8 +332,13 @@ class AStarSearch
             return path
         #Make startcorner into a node
         startcorner.gVal = 0
-        startcorner.hVal = EuclideanDistance(startcorner, goalcorner)
-        startcorner.fVal = EuclideanDistance(startcorner, goalcorner)
+        if @Heuristic == "EuclideanDistance"
+            startcorner.hVal = EuclideanDistance(startcorner, goalcorner)
+            startcorner.fVal = EuclideanDistance(startcorner, goalcorner)
+        else
+            startcorner.hVal = ManhattanDistance(startcorner, goalcorner)
+            startcorner.fVal = ManhattanDistance(startcorner, goalcorner)
+            
         this.addToOpen startcorner
         
         reachedGoal = false
@@ -399,9 +424,11 @@ class ThetaStarSearch
             if indexOfNode < 0
                 #Not in ClosedList or OpenList. So we can add it!
                 corner.gVal = node.gVal + 1
-                corner.hVal = EuclideanDistance(corner, @Goalcorner)
+                if @Heuristic == "EuclideanDistance"
+                    corner.hVal = EuclideanDistance(corner, @Goalcorner)
+                else
+                    corner.hVal = ManhattanDistance(corner, @Goalcorner)
                 corner.fVal = corner.gVal + corner.hVal
-                #Wait, we should LOS the parent
                 corner.Parent = node
                 @ClosedList.push corner
             else
@@ -413,7 +440,10 @@ class ThetaStarSearch
                     @ClosedList.splice indexOfNode, 1
                     #And then we can add
                     corner.gVal = node.gVal + 1
-                    corner.hVal = EuclideanDistance(corner, @Goalcorner)
+                    if @Heuristic == "EuclideanDistance"
+                        corner.hVal = EuclideanDistance(corner, @Goalcorner)
+                    else
+                        corner.hVal = ManhattanDistance(corner, @Goalcorner)
                     corner.fVal = corner.gVal + corner.hVal
                     corner.Parent = node
                     @ClosedList.push corner
@@ -426,8 +456,13 @@ class ThetaStarSearch
             return path
         #Make startcorner into a node
         startcorner.gVal = 0
-        startcorner.hVal = EuclideanDistance(startcorner, goalcorner)
-        startcorner.fVal = EuclideanDistance(startcorner, goalcorner)
+        if @Heuristic == "EuclideanDistance"
+            startcorner.hVal = EuclideanDistance(startcorner, goalcorner)
+            startcorner.fVal = EuclideanDistance(startcorner, goalcorner)
+        else
+            startcorner.hVal = ManhattanDistance(startcorner, goalcorner)
+            startcorner.fVal = ManhattanDistance(startcorner, goalcorner)
+            
         this.addToOpen startcorner
         
         reachedGoal = false
@@ -487,3 +522,4 @@ for corner in path
 #TODO:
 #Step One: Add Obstacles
 #Step Two: Line Smoothing
+console.log ManhattanDistance(grid.Corners[4][17], grid.Corners[17][4])
