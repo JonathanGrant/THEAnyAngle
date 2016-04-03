@@ -158,6 +158,12 @@ EuclideanDistance = (startcorner, goalcorner) ->
 ManhattanDistance = (startCorner, goalCorner) ->
     return Absolute(goalCorner.y - startCorner.y) + Absolute(goalCorner.x - startCorner.x)
 
+#Octile Distance
+OctileDistance = (startCorner, goalCorner) ->
+    dx = Absolute(startCorner.x - goalCorner.x)
+    dy = Absolute(startCorner.y - goalCorner.y)
+    return dx + dy + (1-Math.sqrt(2)) * (Math.min([dx, dy]))
+
 #CornerAtDiagonalIntersection method
 CornerAtDiagonalIntersection = (x, y) ->
     return false
