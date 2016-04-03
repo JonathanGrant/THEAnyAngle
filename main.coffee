@@ -269,28 +269,28 @@ class AStarSearch
         smoothedPath.push path[path.length - 1]
         return smoothedPath
         
-    addToOpen: (node) ->
-        @OpenList.push node
-        #Now remove this corner from ClosedList, and add all others to ClosedList
-        indexToRemove = @ClosedList.indexOf node
-        #Index is -1 for the first index, because nothing should be in closedList
+    addToClosed: (node) ->
+        @ClosedList.push node
+        #Now remove this corner from OpenList, and add all others to OpenList
+        indexToRemove = @OpenList.indexOf node
+        #Index is -1 for the first index, because nothing should be in OpenList
         if !(indexToRemove < 0)
             #Remove!
-            @ClosedList.splice indexToRemove, 1
-        #Now add successors to Closed List
+            @OpenList.splice indexToRemove, 1
+        #Now add successors to Open List
         for corner in node.getSuccessors()
-            #If node is in openList, don't do anything
-            inOpen = false
-            for inListNode in @OpenList
+            #If node is in ClosedList, don't do anything
+            inClosed = false
+            for inListNode in @ClosedList
                 if inListNode.x is corner.x
                     if inListNode.y is corner.y
-                        inOpen = true
+                        inClosed = true
                         break
-            if inOpen
+            if inClosed
                 continue
             indexOfNode = -1
             num = 0
-            for inListNode in @ClosedList
+            for inListNode in @OpenList
                 if inListNode.x is corner.x
                     if inListNode.y is corner.y
                         #Save the index and break out!
@@ -306,14 +306,14 @@ class AStarSearch
                     corner.hVal = ManhattanDistance(corner, @Goalcorner)
                 corner.fVal = corner.gVal + corner.hVal
                 corner.Parent = node
-                @ClosedList.push corner
+                @OpenList.push corner
             else
-                #So the node is already in the ClosedList. Well, does ours have a better fVal?
+                #So the node is already in the OpenList. Well, does ours have a better fVal?
                 ourFval = node.gVal + 1 + EuclideanDistance(corner, @Goalcorner)
-                if ourFval < @ClosedList[indexOfNode]
+                if ourFval < @OpenList[indexOfNode]
                     #Yes, we should add!
                     #First remove the previous
-                    @ClosedList.splice indexOfNode, 1
+                    @OpenList.splice indexOfNode, 1
                     #And then we can add
                     corner.gVal = node.gVal + 1
                     if @Heuristic == "EuclideanDistance"
@@ -322,7 +322,7 @@ class AStarSearch
                         corner.hVal = ManhattanDistance(corner, @Goalcorner)
                     corner.fVal = corner.gVal + corner.hVal
                     corner.Parent = node
-                    @ClosedList.push corner
+                    @OpenList.push corner
         
     search: (startcorner, goalcorner) ->
         @Goalcorner = goalcorner
@@ -339,153 +339,28 @@ class AStarSearch
             startcorner.hVal = ManhattanDistance(startcorner, goalcorner)
             startcorner.fVal = ManhattanDistance(startcorner, goalcorner)
             
-        this.addToOpen startcorner
+        this.addToClosed startcorner
         
         reachedGoal = false
         
-        while (@ClosedList.length)
-            #Get min from the ClosedList and add it to the OpenList
+        while (@OpenList.length)
+            #Get min from the OpenList and add it to the ClosedList
             minFval = 9999999999
             currNode = null
-            for node in @ClosedList
+            for node in @OpenList
                 if node.fVal < minFval
                     minFval = node.fVal
                     currNode = node
             if currNode
-                this.addToOpen currNode
+                this.addToClosed currNode
                 #If this is the goal, stop
                 if currNode is goalcorner
                     console.log "Reached goal!"
                     reachedGoal = true
                     break
             else
-                console.log "Closed list empty"
+                console.log "Open list empty"
                 break
-        #TODO Smoothing
-        #Now Fill in Path
-        #Basically as you are searching, set the parent. Then load the Goal corner. If it costed less than infinity, then a path was found. Basically keep going back until you have reached parent.
-        if reachedGoal
-            curr = goalcorner
-            while curr != startcorner
-                path.push curr
-                curr = curr.Parent
-            path.push startcorner
-        path = path.reverse()
-        #Now that we have the path, do los check for every points
-        path = this.smoothPath path
-        return path
-    
-class ThetaStarSearch
-    constructor: (heuristic) ->
-        @Heuristic = heuristic
-        @OpenList = []
-        @ClosedList = []
-        
-    smoothPath: (path) ->
-        smoothedPath = []
-        if !path
-            return path
-        #First push the first index of path
-        smoothedPath.push(path[0])
-        for corner in path
-            if !(LineOfSight(smoothedPath[smoothedPath.length - 1], corner))
-                smoothedPath.push corner
-        smoothedPath.push path[path.length - 1]
-        return smoothedPath
-        
-    addToOpen: (node) ->
-        @OpenList.push node
-        #Now remove this corner from ClosedList, and add all others to ClosedList
-        indexToRemove = @ClosedList.indexOf node
-        #Index is -1 for the first index, because nothing should be in closedList
-        if !(indexToRemove < 0)
-            #Remove!
-            @ClosedList.splice indexToRemove, 1
-        #Now add successors to Closed List
-        for corner in node.getSuccessors()
-            #If node is in openList, don't do anything
-            inOpen = false
-            for inListNode in @OpenList
-                if inListNode.x is corner.x
-                    if inListNode.y is corner.y
-                        inOpen = true
-                        break
-            if inOpen
-                continue
-            indexOfNode = -1
-            num = 0
-            for inListNode in @ClosedList
-                if inListNode.x is corner.x
-                    if inListNode.y is corner.y
-                        #Save the index and break out!
-                        indexOfNode = num
-                        break
-                num += 1
-            if indexOfNode < 0
-                #Not in ClosedList or OpenList. So we can add it!
-                corner.gVal = node.gVal + 1
-                if @Heuristic == "EuclideanDistance"
-                    corner.hVal = EuclideanDistance(corner, @Goalcorner)
-                else
-                    corner.hVal = ManhattanDistance(corner, @Goalcorner)
-                corner.fVal = corner.gVal + corner.hVal
-                corner.Parent = node
-                @ClosedList.push corner
-            else
-                #So the node is already in the ClosedList. Well, does ours have a better fVal?
-                ourFval = node.gVal + 1 + EuclideanDistance(corner, @Goalcorner)
-                if ourFval < @ClosedList[indexOfNode]
-                    #Yes, we should add!
-                    #First remove the previous
-                    @ClosedList.splice indexOfNode, 1
-                    #And then we can add
-                    corner.gVal = node.gVal + 1
-                    if @Heuristic == "EuclideanDistance"
-                        corner.hVal = EuclideanDistance(corner, @Goalcorner)
-                    else
-                        corner.hVal = ManhattanDistance(corner, @Goalcorner)
-                    corner.fVal = corner.gVal + corner.hVal
-                    corner.Parent = node
-                    @ClosedList.push corner
-        
-    search: (startcorner, goalcorner) ->
-        @Goalcorner = goalcorner
-        path = []
-        if startcorner is goalcorner
-            console.log "Start is Goal"
-            return path
-        #Make startcorner into a node
-        startcorner.gVal = 0
-        if @Heuristic == "EuclideanDistance"
-            startcorner.hVal = EuclideanDistance(startcorner, goalcorner)
-            startcorner.fVal = EuclideanDistance(startcorner, goalcorner)
-        else
-            startcorner.hVal = ManhattanDistance(startcorner, goalcorner)
-            startcorner.fVal = ManhattanDistance(startcorner, goalcorner)
-            
-        this.addToOpen startcorner
-        
-        reachedGoal = false
-        
-        while (@ClosedList.length)
-            #Get min from the ClosedList and add it to the OpenList
-            minFval = 9999999999
-            currNode = null
-            for node in @ClosedList
-                if node.fVal < minFval
-                    minFval = node.fVal
-                    currNode = node
-            if currNode
-                this.addToOpen currNode
-                #If this is the goal, stop
-                if currNode is goalcorner
-                    console.log "Reached goal!"
-                    reachedGoal = true
-                    break
-            else
-                console.log "Closed list empty"
-                break
-        #TODO Smoothing
         #Now Fill in Path
         #Basically as you are searching, set the parent. Then load the Goal corner. If it costed less than infinity, then a path was found. Basically keep going back until you have reached parent.
         if reachedGoal
@@ -505,7 +380,7 @@ grid = new Grid(30, 20)
 grid.createEmptyGrid()
 start = {x:0, y:0}
 goal = {x:14, y:11}
-searchie = new AStarSearch("EuclideanDistance")
+searchie = new AStarSearch("ManhattanDistance")
 path = searchie.search(grid.Corners[4][17], grid.Corners[17][4])
 console.log "Pathie"
 
