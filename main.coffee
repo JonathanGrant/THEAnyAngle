@@ -162,7 +162,7 @@ ManhattanDistance = (startCorner, goalCorner) ->
 OctileDistance = (startCorner, goalCorner) ->
     dx = Absolute(startCorner.x - goalCorner.x)
     dy = Absolute(startCorner.y - goalCorner.y)
-    return dx + dy + (1-Math.sqrt(2)) * (Math.min([dx, dy]))
+    return dx + dy + (1-Math.sqrt(2)) * (Math.min(dx, dy))
 
 #CornerAtDiagonalIntersection method
 CornerAtDiagonalIntersection = (x, y) ->
@@ -308,6 +308,8 @@ class AStarSearch
                 corner.gVal = node.gVal + 1
                 if @Heuristic == "EuclideanDistance"
                     corner.hVal = EuclideanDistance(corner, @Goalcorner)
+                else if @Heuristic == "OctileDistance"
+                    corner.hVal = OctileDistance(corner, @Goalcorner)
                 else
                     corner.hVal = ManhattanDistance(corner, @Goalcorner)
                 corner.fVal = corner.gVal + corner.hVal
@@ -324,6 +326,8 @@ class AStarSearch
                     corner.gVal = node.gVal + 1
                     if @Heuristic == "EuclideanDistance"
                         corner.hVal = EuclideanDistance(corner, @Goalcorner)
+                    else if @Heuristic == "OctileDistance"
+                        corner.hVal = OctileDistance(corner, @Goalcorner)
                     else
                         corner.hVal = ManhattanDistance(corner, @Goalcorner)
                     corner.fVal = corner.gVal + corner.hVal
@@ -341,6 +345,9 @@ class AStarSearch
         if @Heuristic == "EuclideanDistance"
             startcorner.hVal = EuclideanDistance(startcorner, goalcorner)
             startcorner.fVal = EuclideanDistance(startcorner, goalcorner)
+        else if @Heuristic == "OctileDistance"
+            startcorner.hVal = OctileDistance(startcorner, goalcorner)
+            startcorner.fVal = OctileDistance(startcorner, goalcorner)
         else
             startcorner.hVal = ManhattanDistance(startcorner, goalcorner)
             startcorner.fVal = ManhattanDistance(startcorner, goalcorner)
@@ -438,6 +445,8 @@ class ThetaStarSearch
                         corner.gVal = corner.parent.gVal + EuclideanDistance(corner.parent, corner)
                 if @Heuristic == "EuclideanDistance"
                     corner.hVal = EuclideanDistance(corner, @Goalcorner)
+                else if @Heuristic == "OctileDistance"
+                    corner.hVal = OctileDistance(corner, @Goalcorner)
                 else
                     corner.hVal = ManhattanDistance(corner, @Goalcorner)
                 corner.fVal = corner.gVal + corner.hVal
@@ -462,6 +471,8 @@ class ThetaStarSearch
                             corner.gVal = corner.parent.gVal + EuclideanDistance(corner.parent, corner)
                     if @Heuristic == "EuclideanDistance"
                         corner.hVal = EuclideanDistance(corner, @Goalcorner)
+                    else if @Heuristic == "OctileDistance"
+                        corner.hVal = OctileDistance(corner, @Goalcorner)
                     else
                         corner.hVal = ManhattanDistance(corner, @Goalcorner)
                     corner.fVal = corner.gVal + corner.hVal
@@ -479,6 +490,9 @@ class ThetaStarSearch
         if @Heuristic == "EuclideanDistance"
             startcorner.hVal = EuclideanDistance(startcorner, goalcorner)
             startcorner.fVal = EuclideanDistance(startcorner, goalcorner)
+        else if @Heuristic == "OctileDistance"
+            startcorner.hVal = OctileDistance(startcorner, goalcorner)
+            startcorner.fVal = OctileDistance(startcorner, goalcorner)
         else
             startcorner.hVal = ManhattanDistance(startcorner, goalcorner)
             startcorner.fVal = ManhattanDistance(startcorner, goalcorner)
@@ -518,11 +532,12 @@ class ThetaStarSearch
         path = this.smoothPath path
         return path
 
+
 grid = new Grid(30, 20)
 grid.createEmptyGrid()
 start = {x:0, y:0}
 goal = {x:14, y:11}
-searchie = new ThetaStarSearch("ManhattanDistance")
+searchie = new ThetaStarSearch("OctileDistance")
 path = searchie.search(grid.Corners[4][17], grid.Corners[17][4])
 console.log "Pathie"
 
