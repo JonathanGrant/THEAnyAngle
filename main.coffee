@@ -376,11 +376,147 @@ class AStarSearch
             
 #Runner Code
 #TODO add a timer
+
+class ThetaStarSearch
+    constructor: (heuristic) ->
+        @Heuristic = heuristic
+        @OpenList = []
+        @ClosedList = []
+        
+    smoothPath: (path) ->
+        smoothedPath = []
+        if !path
+            return path
+        #First push the first index of path
+        smoothedPath.push(path[0])
+        for corner in path
+            if !(LineOfSight(smoothedPath[smoothedPath.length - 1], corner))
+                smoothedPath.push corner
+        smoothedPath.push path[path.length - 1]
+        return smoothedPath
+        
+    addToClosed: (node) ->
+        @ClosedList.push node
+        #Now remove this corner from OpenList, and add all others to OpenList
+        indexToRemove = @OpenList.indexOf node
+        #Index is -1 for the first index, because nothing should be in OpenList
+        if !(indexToRemove < 0)
+            #Remove!
+            @OpenList.splice indexToRemove, 1
+        #Now add successors to Open List
+        for corner in node.getSuccessors()
+            #If node is in ClosedList, don't do anything
+            inClosed = false
+            for inListNode in @ClosedList
+                if inListNode.x is corner.x
+                    if inListNode.y is corner.y
+                        inClosed = true
+                        break
+            if inClosed
+                continue
+            indexOfNode = -1
+            num = 0
+            for inListNode in @OpenList
+                if inListNode.x is corner.x
+                    if inListNode.y is corner.y
+                        #Save the index and break out!
+                        indexOfNode = num
+                        break
+                num += 1
+            if indexOfNode < 0
+                #Not in ClosedList or OpenList. So we can add it!
+                corner.gVal = node.gVal + 1
+                if node.parent
+                    if LineOfSight(node.parent, corner)
+                        corner.parent = node.parent
+                        corner.gVal = corner.parent.gVal + EuclideanDistance(corner.parent, corner)
+                if @Heuristic == "EuclideanDistance"
+                    corner.hVal = EuclideanDistance(corner, @Goalcorner)
+                else
+                    corner.hVal = ManhattanDistance(corner, @Goalcorner)
+                corner.fVal = corner.gVal + corner.hVal
+                corner.Parent = node
+                @OpenList.push corner
+            else
+                #So the node is already in the OpenList. Well, does ours have a better fVal?
+                ourFval = node.gVal + 1 + EuclideanDistance(corner, @Goalcorner)
+                if node.parent
+                    if LineOfSight(node.parent, corner)
+                        #corner.parent = node.parent
+                        ourFval = node.parent.gVal + EuclideanDistance(node.parent, corner)
+                if ourFval < @OpenList[indexOfNode]
+                    #Yes, we should add!
+                    #First remove the previous
+                    @OpenList.splice indexOfNode, 1
+                    #And then we can add
+                    corner.gVal = node.gVal + 1
+                    if node.parent
+                        if LineOfSight(node.parent, corner)
+                            corner.parent = node.parent
+                            corner.gVal = corner.parent.gVal + EuclideanDistance(corner.parent, corner)
+                    if @Heuristic == "EuclideanDistance"
+                        corner.hVal = EuclideanDistance(corner, @Goalcorner)
+                    else
+                        corner.hVal = ManhattanDistance(corner, @Goalcorner)
+                    corner.fVal = corner.gVal + corner.hVal
+                    corner.Parent = node
+                    @OpenList.push corner
+        
+    search: (startcorner, goalcorner) ->
+        @Goalcorner = goalcorner
+        path = []
+        if startcorner is goalcorner
+            console.log "Start is Goal"
+            return path
+        #Make startcorner into a node
+        startcorner.gVal = 0
+        if @Heuristic == "EuclideanDistance"
+            startcorner.hVal = EuclideanDistance(startcorner, goalcorner)
+            startcorner.fVal = EuclideanDistance(startcorner, goalcorner)
+        else
+            startcorner.hVal = ManhattanDistance(startcorner, goalcorner)
+            startcorner.fVal = ManhattanDistance(startcorner, goalcorner)
+            
+        this.addToClosed startcorner
+        
+        reachedGoal = false
+        
+        while (@OpenList.length)
+            #Get min from the OpenList and add it to the ClosedList
+            minFval = 9999999999
+            currNode = null
+            for node in @OpenList
+                if node.fVal < minFval
+                    minFval = node.fVal
+                    currNode = node
+            if currNode
+                this.addToClosed currNode
+                #If this is the goal, stop
+                if currNode is goalcorner
+                    console.log "Reached goal!"
+                    reachedGoal = true
+                    break
+            else
+                console.log "Open list empty"
+                break
+        #Now Fill in Path
+        #Basically as you are searching, set the parent. Then load the Goal corner. If it costed less than infinity, then a path was found. Basically keep going back until you have reached parent.
+        if reachedGoal
+            curr = goalcorner
+            while curr != startcorner
+                path.push curr
+                curr = curr.Parent
+            path.push startcorner
+        path = path.reverse()
+        #Now that we have the path, do los check for every points
+        path = this.smoothPath path
+        return path
+
 grid = new Grid(30, 20)
 grid.createEmptyGrid()
 start = {x:0, y:0}
 goal = {x:14, y:11}
-searchie = new AStarSearch("ManhattanDistance")
+searchie = new ThetaStarSearch("ManhattanDistance")
 path = searchie.search(grid.Corners[4][17], grid.Corners[17][4])
 console.log "Pathie"
 
